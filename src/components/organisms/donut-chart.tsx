@@ -85,7 +85,7 @@ export function DonutChart({ title }: DonutChartProps) {
           .style("border-radius", "4px")
           .style("font-size", "12px")
           .style("pointer-events", "none")
-          .style("opacity", 0)
+          .style("opacity", "0")
 
         tooltip
           .html(`${d.data.label}: ${d.data.value}%`)
@@ -93,7 +93,7 @@ export function DonutChart({ title }: DonutChartProps) {
           .style("top", event.pageY - 10 + "px")
           .transition()
           .duration(200)
-          .style("opacity", 1)
+          .style("opacity", "1")
       })
       .on("mouseout", function (event, d) {
         d3.select(this).transition().duration(200).attr("d", arc)
@@ -149,6 +149,7 @@ export function DonutChart({ title }: DonutChartProps) {
       .attr("height", 12)
       .attr("fill", (d) => d.color)
       .attr("rx", 2)
+      .style("opacity", "1")
 
     legendItems
       .append("text")

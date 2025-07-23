@@ -114,7 +114,7 @@ export function TrendChart({ title }: TrendChartProps) {
           .tickFormat(() => ""),
       )
       .style("stroke-dasharray", "3,3")
-      .style("opacity", 0.3)
+      .style("opacity", "0.3")
 
     g.append("g")
       .attr("class", "grid")
@@ -125,7 +125,7 @@ export function TrendChart({ title }: TrendChartProps) {
           .tickFormat(() => ""),
       )
       .style("stroke-dasharray", "3,3")
-      .style("opacity", 0.3)
+      .style("opacity", "0.3")
 
     // Add trend lines
     trendData.forEach((trend) => {
