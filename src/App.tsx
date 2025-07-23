@@ -6,6 +6,8 @@ import { Header } from "./components/organisms/header"
 import { ChecklistSection } from "./components/organisms/checklist-section"
 import { ContentCard } from "./components/molecules/content-card"
 import { DataTable } from "./components/organisms/data-table"
+import { TrendChart } from "./components/organisms/trend-chart"
+import { DonutChart } from "./components/organisms/donut-chart"
 import { Button } from "./components/atoms/button"
 
 function App() {
@@ -16,6 +18,19 @@ function App() {
       <div className="p-6 space-y-6">
         {/* Header Section */}
         <Header />
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Trend Chart - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <TrendChart title="Performance Trends" />
+          </div>
+
+          {/* Donut Chart - Takes 1 column */}
+          <div className="lg:col-span-1">
+            <DonutChart title="Project Completion" />
+          </div>
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

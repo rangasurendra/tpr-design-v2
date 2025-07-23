@@ -12,6 +12,7 @@
     "@types/node": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "d3": "latest",
     "jiti": "latest",
     "less": "latest",
     "lightningcss": "latest",
@@ -30,6 +31,7 @@
     "yaml": "latest"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
