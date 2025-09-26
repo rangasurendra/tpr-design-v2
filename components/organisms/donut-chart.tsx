@@ -55,7 +55,7 @@ export function DonutChart({ title, data, config }: DonutChartProps) {
       .outerRadius(radius)
 
     // Create tooltip if enabled
-    let tooltip: any = null
+    let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | null = null
     if (showTooltip) {
       tooltip = createTooltip()
     }

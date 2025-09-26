@@ -100,7 +100,7 @@ export function SplineChart({ title, data, config }: SplineChartProps) {
       .attr("d", line)
 
     // Create tooltip if enabled
-    let tooltip: any = null
+    let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | null = null
     if (showTooltip) {
       tooltip = createTooltip()
     }

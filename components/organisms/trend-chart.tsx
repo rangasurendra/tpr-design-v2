@@ -22,7 +22,7 @@ export function TrendChart({ title, data, config }: TrendChartProps) {
     svg.selectAll("*").remove() // Clear previous render
     removeTooltip() // Remove any existing tooltips
 
-    const { width, height, margin, colors, showTooltip, showLegend } = chartConfig
+    const { width, height, margin, showTooltip, showLegend } = chartConfig
     const chartWidth = width - margin.left - margin.right
     const chartHeight = height - margin.top - margin.bottom
 
@@ -47,7 +47,7 @@ export function TrendChart({ title, data, config }: TrendChartProps) {
 
     // Line generator
     const line = d3
-      .line<any>()
+      .line<{ date: Date; value: number }>()
       .x((d) => xScale(d.date))
       .y((d) => yScale(d.value))
       .curve(d3.curveMonotoneX)
@@ -84,7 +84,7 @@ export function TrendChart({ title, data, config }: TrendChartProps) {
       .style("opacity", "0.3")
 
     // Create tooltip if enabled
-    let tooltip: any = null
+    let tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | null = null
     if (showTooltip) {
       tooltip = createTooltip()
     }

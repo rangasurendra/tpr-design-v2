@@ -97,7 +97,7 @@ export function generateTableData(): TableData {
   const rows = Array.from({ length: DASHBOARD_CONFIG.tableRows }, (_, rowIndex) => {
     const row: Record<string, string> = {}
     columns.forEach(col => {
-      row[col.key] = 'Value'
+      row[col.key] = `Value ${rowIndex + 1}`
     })
     return row
   })
