@@ -2,142 +2,137 @@
 
 import { useEffect, useRef } from "react"
 import * as d3 from "d3"
-
-interface SplineDataPoint {
-  category: string
-  value: number
-}
+import { SplineDataPoint, ChartConfig } from "@/lib/types"
+import { mergeChartConfig, createTooltip, removeTooltip, formatNumber } from "@/lib/chart-utils"
+import { SPLINE_CHART_DEFAULTS } from "@/lib/constants"
 
 interface SplineChartProps {
   title: string
+  data: SplineDataPoint[]
+  config?: Partial<ChartConfig>
 }
 
-export function SplineChart({ title }: SplineChartProps) {
+export function SplineChart({ title, data, config }: SplineChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
-
-  // Generate sample spline data
-  const generateSplineData = (): SplineDataPoint[] => {
-    const categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-    return categories.map((category) => ({
-      category,
-      value: Math.floor(Math.random() * 80) + 20 + Math.sin(categories.indexOf(category) * 0.5) * 15,
-    }))
-  }
+  const chartConfig = mergeChartConfig({
+    width: SPLINE_CHART_DEFAULTS.width,
+    height: SPLINE_CHART_DEFAULTS.height,
+    margin: SPLINE_CHART_DEFAULTS.margin,
+    ...config,
+  })
 
   useEffect(() => {
-    if (!svgRef.current) return
+    if (!svgRef.current || !data.length) return
 
     const svg = d3.select(svgRef.current)
     svg.selectAll("*").remove()
+    removeTooltip()
 
-    const margin = { top: 20, right: 30, bottom: 40, left: 50 }
-    const width = 500 - margin.left - margin.right
-    const height = 250 - margin.top - margin.bottom
+    const { width, height, margin, showTooltip } = chartConfig
+    const chartWidth = width - margin.left - margin.right
+    const chartHeight = height - margin.top - margin.bottom
 
     const g = svg
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("width", width)
+      .attr("height", height)
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`)
-
-    const data = generateSplineData()
 
     // Scales
     const xScale = d3
       .scalePoint()
       .domain(data.map((d) => d.category))
-      .range([0, width])
-      .padding(0.1)
+      .range([0, chartWidth])
 
     const yScale = d3
       .scaleLinear()
       .domain([0, d3.max(data, (d) => d.value) as number])
-      .range([height, 0])
+      .range([chartHeight, 0])
 
-    // Create spline line generator
+    // Line generator
     const line = d3
       .line<SplineDataPoint>()
-      .x((d) => xScale(d.category) || 0)
+      .x((d) => xScale(d.category) ?? 0)
       .y((d) => yScale(d.value))
-      .curve(d3.curveCardinal.tension(0.5)) // Smooth spline curve
+      .curve(d3.curveCardinal)
 
-    // Add gradient definition
-    const gradient = svg
-      .append("defs")
-      .append("linearGradient")
-      .attr("id", "spline-gradient")
-      .attr("gradientUnits", "userSpaceOnUse")
-      .attr("x1", 0)
-      .attr("y1", height)
-      .attr("x2", 0)
-      .attr("y2", 0)
-
-    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#8b5cf6").attr("stop-opacity", 0.1)
-
-    gradient.append("stop").attr("offset", "100%").attr("stop-color", "#8b5cf6").attr("stop-opacity", 0.8)
+    // Area generator for filled effect
+    const area = d3
+      .area<SplineDataPoint>()
+      .x((d) => xScale(d.category) ?? 0)
+      .y0(chartHeight)
+      .y1((d) => yScale(d.value))
+      .curve(d3.curveCardinal)
 
     // Add axes
     g.append("g")
-      .attr("transform", `translate(0,${height})`)
+      .attr("transform", `translate(0,${chartHeight})`)
       .call(d3.axisBottom(xScale))
-      .selectAll("text")
-      .style("font-size", "12px")
 
-    g.append("g").call(d3.axisLeft(yScale).ticks(5)).selectAll("text").style("font-size", "12px")
+    g.append("g").call(d3.axisLeft(yScale))
 
-    // Add area under the curve
-    const area = d3
-      .area<SplineDataPoint>()
-      .x((d) => xScale(d.category) || 0)
-      .y0(height)
-      .y1((d) => yScale(d.value))
-      .curve(d3.curveCardinal.tension(0.5))
+    // Add gradient definition
+    const defs = svg.append("defs")
+    const gradient = defs
+      .append("linearGradient")
+      .attr("id", "splineGradient")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", 0)
+      .attr("y2", chartHeight)
 
-    g.append("path").datum(data).attr("fill", "url(#spline-gradient)").attr("d", area)
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#8b5cf6").attr("stop-opacity", 0.8)
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", "#8b5cf6").attr("stop-opacity", 0.1)
 
-    // Add the spline line
-    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#8b5cf6").attr("stroke-width", 3).attr("d", line)
+    // Add area fill
+    g.append("path")
+      .datum(data)
+      .attr("fill", "url(#splineGradient)")
+      .attr("d", area)
+
+    // Add spline line
+    g.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "#8b5cf6")
+      .attr("stroke-width", 3)
+      .attr("d", line)
+
+    // Create tooltip if enabled
+    let tooltip: any = null
+    if (showTooltip) {
+      tooltip = createTooltip()
+    }
 
     // Add data points
-    g.selectAll(".dot")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("class", "dot")
-      .attr("cx", (d) => xScale(d.category) || 0)
-      .attr("cy", (d) => yScale(d.value))
-      .attr("r", 4)
-      .attr("fill", "#8b5cf6")
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", 2)
-
-    // Add value labels on hover
-    const tooltip = d3
-      .select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("opacity", 0)
-      .style("position", "absolute")
-      .style("background", "rgba(0, 0, 0, 0.8)")
-      .style("color", "white")
-      .style("padding", "8px")
-      .style("border-radius", "4px")
-      .style("font-size", "12px")
-      .style("pointer-events", "none")
-
-    g.selectAll(".dot")
-      .on("mouseover", (event, d) => {
-        tooltip.transition().duration(200).style("opacity", 0.9)
-        tooltip
-          .html(`${d.category}: ${Math.round(d.value)}`)
-          .style("left", event.pageX + 10 + "px")
-          .style("top", event.pageY - 28 + "px")
-      })
-      .on("mouseout", () => {
-        tooltip.transition().duration(500).style("opacity", 0)
-      })
-  }, [])
+    if (showTooltip) {
+      g.selectAll(".dot")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("class", "dot")
+        .attr("cx", (d) => xScale(d.category) ?? 0)
+        .attr("cy", (d) => yScale(d.value))
+        .attr("r", 4)
+        .attr("fill", "#8b5cf6")
+        .style("cursor", "pointer")
+        .on("mouseover", (event, d) => {
+          if (tooltip) {
+            tooltip.transition().duration(200).style("opacity", 0.9)
+            tooltip
+              .html(`${d.category}: ${formatNumber(d.value)}`)
+              .style("left", event.pageX + 10 + "px")
+              .style("top", event.pageY - 28 + "px")
+          }
+        })
+        .on("mouseout", () => {
+          if (tooltip) {
+            tooltip.transition().duration(500).style("opacity", 0)
+          }
+        })
+    }
+  }, [data, chartConfig])
 
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-6">

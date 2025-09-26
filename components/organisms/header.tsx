@@ -3,26 +3,59 @@
 import { SearchBar } from "@/components/molecules/search-bar"
 import { DropdownSelector } from "@/components/molecules/dropdown-selector"
 import { useState } from "react"
+import { DEFAULT_DROPDOWN_OPTIONS } from "@/lib/constants"
 
-export function Header() {
-  const [selectedTitle, setSelectedTitle] = useState("Selections")
+interface HeaderProps {
+  title?: string
+  placeholder?: string
+  onSearch?: (value: string) => void
+  onSelectionChange?: (value: string) => void
+}
+
+export function Header({ 
+  title = "Title", 
+  placeholder = "Search...",
+  onSearch,
+  onSelectionChange 
+}: HeaderProps) {
+  const [selectedTitle, setSelectedTitle] = useState(DEFAULT_DROPDOWN_OPTIONS[0])
   const [searchValue, setSearchValue] = useState("")
 
-  const titleOptions = ["Selections", "Options", "Categories", "Items"]
+  const handleTitleChange = (value: string) => {
+    setSelectedTitle(value)
+    if (onSelectionChange) {
+      onSelectionChange(value)
+    }
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    if (onSearch) {
+      onSearch(value)
+    }
+  }
 
   return (
     <div className="bg-slate-800 p-6 rounded-t-lg">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
-          <span className="text-white text-sm font-medium">Title</span>
+          <span className="text-white text-sm font-medium">{title}</span>
           <div className="w-48">
-            <DropdownSelector options={titleOptions} value={selectedTitle} onChange={setSelectedTitle} />
+            <DropdownSelector 
+              options={Array.from(DEFAULT_DROPDOWN_OPTIONS)} 
+              value={selectedTitle} 
+              onChange={handleTitleChange} 
+            />
           </div>
         </div>
       </div>
 
       <div className="mt-4">
-        <SearchBar placeholder="Search..." value={searchValue} onChange={setSearchValue} />
+        <SearchBar 
+          placeholder={placeholder} 
+          value={searchValue} 
+          onChange={handleSearchChange} 
+        />
       </div>
     </div>
   )
